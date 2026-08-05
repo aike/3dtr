@@ -117,6 +117,9 @@ details[open] summary{margin-bottom:8px}
 .notes b{color:var(--fg)}
 .notes ul{margin:6px 0 0 1.4em;font-size:.92rem;color:var(--fg2)}
 footer{margin-top:28px;font-size:.8rem;color:var(--fg3)}
+header{position:relative}
+.about{position:absolute;top:2px;right:0;font-size:.8rem;color:var(--fg3);text-decoration:none}
+.about:hover{color:var(--accent);text-decoration:underline}
 
 @media (max-width:760px){
   .cards{grid-template-columns:1fr}
@@ -129,6 +132,7 @@ footer{margin-top:28px;font-size:.8rem;color:var(--fg3)}
 <div class="wrap">
 
 <header>
+  <a class="about" href="https://github.com/aike/3dtr" target="_blank" rel="noopener">about</a>
   <h1>3D座標系 変換ビジュアライザ</h1>
   <p class="sub">Unity / Unreal / Godot / Blender / Maya / glTF / OpenGL / Direct3D — ツール間で「同じ向き・同じ位置」を保つための座標変換行列を学ぶ</p>
 </header>
