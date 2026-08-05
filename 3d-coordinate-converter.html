@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D座標系 変換ビジュアライザ</title>
+<style>
+:root{
+  --bg:#0f1117; --panel:#171a21; --panel2:#1d212b; --line:#2a2f3c;
+  --fg:#e6e8ee; --fg2:#9aa3b5; --fg3:#6b7386;
+  --accent:#7aa2ff;
+  --ax:#ff6b6b; --ay:#5fd07a; --az:#5da9ff;
+  --neg:#ff8787; --warn:#f0a24b; --ok:#5fd07a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:system-ui,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  line-height:1.65; padding:24px 16px 80px;
+}
+.wrap{max-width:1060px;margin:0 auto}
+header h1{font-size:1.45rem;letter-spacing:.02em}
+header .sub{color:var(--fg2);font-size:.92rem;margin-top:2px}
+section{margin-top:22px}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:10px;letter-spacing:.03em}
+h2::before{content:"■ ";font-size:.7em;vertical-align:.15em}
+code,.mono{font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
+
+/* ---- controls ---- */
+.controls{
+  display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+}
+.controls label{font-size:.88rem;color:var(--fg2)}
+select,input[type=number]{
+  background:var(--panel2);color:var(--fg);border:1px solid var(--line);
+  border-radius:8px;padding:6px 8px;font-size:.95rem;font-family:inherit;
+}
+select:focus,input:focus{outline:1px solid var(--accent)}
+button{
+  background:var(--panel2);color:var(--fg);border:1px solid var(--line);
+  border-radius:8px;padding:6px 12px;font-size:1rem;cursor:pointer;
+}
+button:hover{border-color:var(--accent)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:.88rem;color:var(--fg2);cursor:pointer}
+.chk input{accent-color:var(--accent)}
+
+/* ---- system cards ---- */
+.cards{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{font-size:1.02rem;margin-bottom:6px}
+.card .hand{font-size:.75rem;padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle}
+.hand.rh{background:#1e3a2a;color:#7de39a}
+.hand.lh{background:#3a2a1e;color:#f0b97d}
+.card table{border-collapse:collapse;font-size:.9rem;width:100%}
+.card td{padding:2px 6px 2px 0;color:var(--fg2)}
+.card td.v{color:var(--fg);font-family:ui-monospace,Consolas,monospace}
+.bigarrow{align-self:center;font-size:1.6rem;color:var(--accent);padding:0 4px}
+.axX{color:var(--ax)} .axY{color:var(--ay)} .axZ{color:var(--az)}
+
+/* ---- viewports ---- */
+.viewports{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vp{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.vp canvas{display:block;width:100%;height:340px;cursor:grab;touch-action:none}
+.vp canvas:active{cursor:grabbing}
+.vp .cap{padding:8px 12px;font-size:.86rem;color:var(--fg2);border-top:1px solid var(--line)}
+.legend{font-size:.82rem;color:var(--fg3);margin-top:8px}
+
+/* ---- matrix ---- */
+.mat{
+  display:inline-grid;gap:3px 14px;position:relative;
+  padding:8px 14px;font-family:ui-monospace,Consolas,monospace;font-size:1rem;
+  vertical-align:middle;
+}
+.mat.c3{grid-template-columns:repeat(3,minmax(2.4ch,auto))}
+.mat.c4{grid-template-columns:repeat(4,minmax(2.4ch,auto))}
+.mat.c1{grid-template-columns:auto}
+.mat::before,.mat::after{content:"";position:absolute;top:0;bottom:0;width:7px;border:2px solid var(--fg2)}
+.mat::before{left:0;border-right:none;border-radius:3px 0 0 3px}
+.mat::after{right:0;border-left:none;border-radius:0 3px 3px 0}
+.mat span{text-align:right}
+.mat .z{color:var(--fg3)} .mat .n{color:var(--neg)}
+.matline{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:10px 0}
+.matline .op{font-size:1.1rem;color:var(--fg2);font-family:ui-monospace,Consolas,monospace}
+.matlabel{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.matlabel .t{font-size:.78rem;color:var(--fg3)}
+.formula{
+  font-family:ui-monospace,Consolas,monospace;font-size:1.15rem;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:10px 16px;display:inline-block;margin-bottom:10px;
+}
+.badge{display:inline-block;font-size:.8rem;padding:3px 10px;border-radius:99px;margin-left:10px;vertical-align:middle}
+.badge.det1{background:#1e3a2a;color:#7de39a}
+.badge.detm1{background:#3d2f1a;color:#f0b97d}
+.panelbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--accent);font-size:.92rem}
+details[open] summary{margin-bottom:8px}
+
+/* ---- points table ---- */
+.pts table{border-collapse:collapse;width:100%;font-size:.93rem}
+.pts th{color:var(--fg2);font-weight:600;text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);font-size:.85rem}
+.pts td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.pts td.mono{font-family:ui-monospace,Consolas,monospace}
+.pts .arr{color:var(--accent)}
+.pts .note{color:var(--fg3);font-size:.83rem}
+.pts input{width:4.6em;text-align:right}
+.calcbox{
+  margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;color:var(--fg2)
+}
+.calcbox b{color:var(--fg);font-weight:600}
+
+/* ---- notes ---- */
+.notes details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:10px}
+.notes p{font-size:.92rem;color:var(--fg2);margin-top:6px}
+.notes b{color:var(--fg)}
+.notes ul{margin:6px 0 0 1.4em;font-size:.92rem;color:var(--fg2)}
+footer{margin-top:28px;font-size:.8rem;color:var(--fg3)}
+
+@media (max-width:760px){
+  .cards{grid-template-columns:1fr}
+  .bigarrow{transform:rotate(90deg);justify-self:center}
+  .viewports{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>3D座標系 変換ビジュアライザ</h1>
+  <p class="sub">Unity / Unreal / Godot / Blender / Maya / glTF / OpenGL / Direct3D — ツール間で「同じ向き・同じ位置」を保つための座標変換行列を学ぶ</p>
+</header>
+
+<section class="controls">
+  <label>変換元
+    <select id="selSrc"></select>
+  </label>
+  <button id="btnSwap" title="変換元と変換先を入れ替え">⇄</button>
+  <label>変換先
+    <select id="selDst"></select>
+  </label>
+  <label id="blenderFwdWrap" style="display:none">Blenderの前方軸
+    <select id="selBlenderFwd">
+      <option value="+Y">+Y(Y↔Z入替の定番)</option>
+      <option value="-Y">−Y(正面=−Yの慣習)</option>
+    </select>
+  </label>
+  <label class="chk"><input type="checkbox" id="chkScale">単位換算を含める</label>
+  <label class="chk"><input type="checkbox" id="chkDecomp" checked>軸分解を表示</label>
+  <label class="chk"><input type="checkbox" id="chkRot" checked>自動回転</label>
+</section>
+
+<section>
+  <div class="cards">
+    <div class="card" id="cardSrc"></div>
+    <div class="bigarrow">➜</div>
+    <div class="card" id="cardDst"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3Dビュー — 両方のツールで「同じ見た目」になるのがゴール</h2>
+  <div class="viewports">
+    <div class="vp"><canvas id="cvSrc"></canvas><div class="cap" id="capSrc"></div></div>
+    <div class="vp"><canvas id="cvDst"></canvas><div class="cap" id="capDst"></div></div>
+  </div>
+  <p class="legend">✈ 紙飛行機:機首=<b>前方(Forward)</b>/垂直尾翼=<b>上(Up)</b>/オレンジの翼=<b>右(Right)</b>。
+  ドラッグで回転・ホイールでズーム(両ビュー連動)。点線は変換対象の点を各エンジンの軸成分に分解した経路です。</p>
+</section>
+
+<section>
+  <h2>変換行列</h2>
+  <div class="panelbox" id="matrixBox"></div>
+</section>
+
+<section class="pts">
+  <h2>座標の変換例</h2>
+  <div class="panelbox">
+    <table id="ptsTable"></table>
+    <div class="calcbox" id="calcBox"></div>
+  </div>
+</section>
+
+<section class="notes">
+  <h2>解説</h2>
+
+  <details open>
+    <summary>変換行列はどうやって作る?</summary>
+    <p>各ツールの座標系は「<b>右(Right)・上(Up)・前(Forward)</b>がどの軸か」で決まります。
+    ツールごとに、意味方向(右・上・前)を各エンジン座標で表した列ベクトルを並べた行列
+    <code>S = [ R U F ]</code> を作ると、任意の意味的な方向 v は各ツールで <code>S·v</code> と表せます。</p>
+    <p>変換元 A から変換先 B への変換は「A の座標 → 意味空間 → B の座標」の合成で、
+    <b><code>M = S<sub>B</sub> · S<sub>A</sub><sup>−1</sup></code></b> です。
+    S は符号付き置換行列(直交行列)なので <code>S<sup>−1</sup> = S<sup>T</sup></code> となり、
+    M も必ず「成分が 0, ±1 だけの行列」になります。つまり座標変換の実体は<b>軸の入れ替えと符号反転</b>です。</p>
+  </details>
+
+  <details>
+    <summary>行列式 det = −1 の意味 — 利き手系の反転</summary>
+    <p>右手系⇔左手系の変換では det(M) = −1 になります。これは<b>鏡映(反転)を含む</b>変換で、純粋な回転では実現できません。実務では次の影響があります:</p>
+    <ul>
+      <li><b>三角形の巻き順(winding order)が反転</b>する → 表裏が逆になるため、インポータはインデックス順の反転や法線の再計算を行う</li>
+      <li><b>回転の向きが反転</b>する → オイラー角やクォータニオンは成分の入れ替えだけでなく符号の調整が必要</li>
+      <li>変換行列(姿勢)T を丸ごと移すときは <code>T′ = M · T · M<sup>−1</sup></code> とすれば利き手系の違いも含めて正しく変換できる</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>単位(スケール)の違い</summary>
+    <p>軸だけでなく<b>1単位の長さ</b>もツールごとに違います:
+    Unity = 1m、Godot = 1m、Blender = 1m(既定)、<b>Unreal = 1cm</b>、<b>Maya = 1cm(既定)</b>。
+    位置座標には単位換算の係数を掛けます(例: Unity→Unreal は ×100)。
+    上のチェックボックスをオンにすると 4×4 同次変換行列としてスケール込みで表示します。
+    <b>方向ベクトルや法線には単位換算を掛けません</b>。</p>
+  </details>
+
+  <details>
+    <summary>Blenderの「前方」はどっち? (+Y / −Y 問題)</summary>
+    <p>Blender はフロントビュー(テンキー1)が <b>−Y 方向からモデルを見る</b>ため、
+    「キャラクターの正面を −Y に向ける」流儀が一般的です。一方、変換レシピとしては
+    単純に <b>Y と Z を入れ替える(前方=+Y とみなす)</b>方法が広く使われています。
+    どちらが正しいというものではなく、エクスポート設定(FBX/glTFの Forward/Up 指定)と
+    合わせて一貫させることが重要です。上のセレクタで両方試して、行列がどう変わるか比べてみてください。</p>
+  </details>
+
+  <details>
+    <summary>glTF の前方 +Z と OpenGL の前方 −Z — 「前方」の意味の違いに注意</summary>
+    <p>glTF 仕様は「右手系・+Y up・<b>アセットの正面は +Z を向く</b>・右は −X」と定めています。
+    一方 OpenGL の「前方 −Z」は<b>カメラの視線方向</b>の慣習です。glTF の +Z は
+    「モデルがカメラの方を向く」向きなので、両者の「前方」は意味が逆向きです。
+    本アプリは「前・上・右」の意味を保存するため、glTF ⇔ OpenGL の変換は恒等行列ではなく
+    <b>上軸まわりの180°回転相当</b>になります。軸ラベルを機械的にそろえるだけなら恒等変換ですが、
+    「モデルの正面をどちらに向けるか」という規約の違いが残る——Blender の ±Y 問題と同型の罠です。</p>
+    <p>実務での検算: Blender(前方 = −Y)→ glTF は公式エクスポータどおり
+    <code>(x, y, z) ↦ (x, z, −y)</code>、Unity → glTF は X 反転
+    <code>(x, y, z) ↦ (−x, y, z)</code> になります(上のセレクタで確認できます)。</p>
+  </details>
+
+  <details>
+    <summary>各ツールの座標系 早見表</summary>
+    <ul>
+      <li><b>Unity</b> — 左手系 / Y-up / 前方 +Z / 右 +X / 1u = 1m</li>
+      <li><b>Unreal Engine</b> — 左手系 / Z-up / 前方 +X / 右 +Y / 1u = 1cm</li>
+      <li><b>Godot</b> — 右手系 / Y-up / 前方 −Z(OpenGL流)/ 右 +X / 1u = 1m</li>
+      <li><b>Blender</b> — 右手系 / Z-up / 前方 +Y または −Y(慣習による)/ 1u = 1m</li>
+      <li><b>Maya</b> — 右手系 / Y-up / 前方 −Z(OpenGL流)/ 右 +X / 1u = 1cm(既定)</li>
+      <li><b>glTF</b> — 右手系 / Y-up / 前方 +Z(正面が +Z を向く)/ 右 −X / 1u = 1m(仕様で規定)</li>
+      <li><b>OpenGL / WebGL</b> — 右手系 / Y-up / 前方 −Z(視線方向)/ 右 +X / 単位は任意。three.js も同じ慣習</li>
+      <li><b>Direct3D</b> — 左手系 / Y-up / 前方 +Z / 右 +X / 単位は任意。Babylon.js の既定も同じ慣習</li>
+    </ul>
+  </details>
+</section>
+
+<footer>※ 各ツールの単位・前方軸は代表的な慣習・既定値です。プロジェクト設定やエクスポート設定により異なる場合があります。</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   座標系の定義
+   R/U/F = 意味方向(右/上/前)をそのツールの座標で表したもの
+   S = [R U F](列ベクトル)…意味空間 → エンジン座標 の変換
+   ============================================================ */
+const SYSTEMS = {
+  blender: { label:"Blender", hand:"RH", unit:"m",  unitScale:1,
+    variants:{ "+Y": {R:[1,0,0], U:[0,0,1], F:[0,1,0]},
+               "-Y": {R:[-1,0,0],U:[0,0,1], F:[0,-1,0]} } },
+  maya:    { label:"Maya", hand:"RH", unit:"cm", unitScale:0.01,
+    R:[1,0,0], U:[0,1,0], F:[0,0,-1] },
+  unity:   { label:"Unity", hand:"LH", unit:"m",  unitScale:1,
+    R:[1,0,0], U:[0,1,0], F:[0,0,1] },
+  unreal:  { label:"Unreal Engine", hand:"LH", unit:"cm", unitScale:0.01,
+    R:[0,1,0], U:[0,0,1], F:[1,0,0] },
+  godot:   { label:"Godot", hand:"RH", unit:"m",  unitScale:1,
+    R:[1,0,0], U:[0,1,0], F:[0,0,-1] },
+  gltf:    { label:"glTF", hand:"RH", unit:"m",  unitScale:1,
+    unitText:"1 m(仕様で規定)",
+    R:[-1,0,0], U:[0,1,0], F:[0,0,1] },
+  opengl:  { label:"OpenGL / WebGL", hand:"RH", unit:"m", unitScale:1,
+    unitText:"任意(便宜上 1u=1m)",
+    R:[1,0,0], U:[0,1,0], F:[0,0,-1] },
+  d3d:     { label:"Direct3D", hand:"LH", unit:"m", unitScale:1,
+    unitText:"任意(便宜上 1u=1m)",
+    R:[1,0,0], U:[0,1,0], F:[0,0,1] },
+};
+const ORDER = ["blender","maya","unity","unreal","godot","gltf","opengl","d3d"];
+
+const state = {
+  src:"blender", dst:"unity", blenderFwd:"+Y",
+  useScale:false, showDecomp:true, autoRot:true,
+  point:[1,2,3],
+  cam:{ yaw:-0.65, pitch:0.42, r:9 },
+};
+
+/* ---------- 小さな行列/ベクトルユーティリティ ---------- */
+const vAdd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const vScale=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const vDot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const vCross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const vNorm=a=>{const l=Math.hypot(...a);return l?vScale(a,1/l):a;};
+
+function matFromCols(R,U,F){
+  return [[R[0],U[0],F[0]],[R[1],U[1],F[1]],[R[2],U[2],F[2]]];
+}
+function transpose(M){
+  return [[M[0][0],M[1][0],M[2][0]],[M[0][1],M[1][1],M[2][1]],[M[0][2],M[1][2],M[2][2]]];
+}
+function matMul(A,B){
+  const C=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++)
+    C[i][j]=A[i][0]*B[0][j]+A[i][1]*B[1][j]+A[i][2]*B[2][j];
+  return C;
+}
+function matVec(M,v){
+  return [vDot(M[0],v), vDot(M[1],v), vDot(M[2],v)];
+}
+function det3(M){
+  return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])
+       - M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])
+       + M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
+}
+
+/* ---------- 座標系の解決 ---------- */
+function axisName(v){
+  const names=["X","Y","Z"];
+  for(let i=0;i<3;i++){
+    if(v[i]===1)  return "+"+names[i];
+    if(v[i]===-1) return "−"+names[i];
+  }
+  return "?";
+}
+function resolve(key){
+  const base = SYSTEMS[key];
+  const ruf = base.variants ? base.variants[state.blenderFwd] : base;
+  return {
+    key, label: base.label, hand: base.hand, unit: base.unit, unitScale: base.unitScale,
+    unitText: base.unitText,
+    R: ruf.R, U: ruf.U, F: ruf.F,
+    S: matFromCols(ruf.R, ruf.U, ruf.F),
+  };
+}
+function conversion(){
+  const A = resolve(state.src), B = resolve(state.dst);
+  const M = matMul(B.S, transpose(A.S));     // 成分は 0, ±1 のみ
+  const scale = A.unitScale / B.unitScale;   // 位置座標に掛ける単位換算
+  return { A, B, M, scale, det: Math.round(det3(M)) };
+}
+
+/* ---------- 表示ユーティリティ ---------- */
+function fmt(n){
+  if(Number.isInteger(n)) return String(n);
+  return String(parseFloat(n.toFixed(3)));
+}
+function fmtVec(v){ return "(" + v.map(fmt).join(", ") + ")"; }
+function cellHTML(v){
+  const cls = v===0 ? "z" : (v<0 ? "n" : "");
+  return `<span class="${cls}">${fmt(v).replace("-","−")}</span>`;
+}
+function matHTML(M){
+  const cells = M.flat().map(cellHTML).join("");
+  return `<span class="mat c${M[0].length}">${cells}</span>`;
+}
+function vecColHTML(v){
+  return `<span class="mat c1">${v.map(c=>`<span>${c}</span>`).join("")}</span>`;
+}
+function axisSpan(name){
+  const letter = name.replace(/[+−]/,"");
+  return `<span class="ax${letter} mono">${name}</span>`;
+}
+
+/* ---------- DOM: セレクタ ---------- */
+const selSrc=document.getElementById("selSrc"), selDst=document.getElementById("selDst");
+for(const k of ORDER){
+  selSrc.add(new Option(SYSTEMS[k].label,k));
+  selDst.add(new Option(SYSTEMS[k].label,k));
+}
+selSrc.value=state.src; selDst.value=state.dst;
+selSrc.onchange=()=>{state.src=selSrc.value;updateAll();};
+selDst.onchange=()=>{state.dst=selDst.value;updateAll();};
+document.getElementById("btnSwap").onclick=()=>{
+  [state.src,state.dst]=[state.dst,state.src];
+  selSrc.value=state.src; selDst.value=state.dst; updateAll();
+};
+document.getElementById("selBlenderFwd").onchange=e=>{state.blenderFwd=e.target.value;updateAll();};
+document.getElementById("chkScale").onchange=e=>{state.useScale=e.target.checked;updateAll();};
+document.getElementById("chkDecomp").onchange=e=>{state.showDecomp=e.target.checked;};
+document.getElementById("chkRot").onchange=e=>{state.autoRot=e.target.checked;};
+
+/* ---------- DOM: 情報カード ---------- */
+function cardHTML(sys, title){
+  const handTxt = sys.hand==="RH" ? "右手系" : "左手系";
+  const handCls = sys.hand==="RH" ? "rh" : "lh";
+  return `<h3>${title}: ${sys.label}<span class="hand ${handCls}">${handTxt}</span></h3>
+  <table>
+    <tr><td>上方向 (Up)</td><td class="v">${axisSpan(axisName(sys.U))}</td></tr>
+    <tr><td>前方向 (Forward)</td><td class="v">${axisSpan(axisName(sys.F))}</td></tr>
+    <tr><td>右方向 (Right)</td><td class="v">${axisSpan(axisName(sys.R))}</td></tr>
+    <tr><td>1単位の長さ</td><td class="v">${sys.unitText || ("1 " + sys.unit)}</td></tr>
+  </table>`;
+}
+
+/* ---------- DOM: 行列表示 ---------- */
+function mappingFormula(M){
+  const vars=["x","y","z"];
+  const comps=M.map(row=>{
+    for(let j=0;j<3;j++){
+      if(row[j]===1)  return vars[j];
+      if(row[j]===-1) return "−"+vars[j];
+    }
+    return "0";
+  });
+  return `(x, y, z) ↦ (${comps.join(", ")})`;
+}
+function updateMatrixBox(cv){
+  const {A,B,M,scale,det}=cv;
+  const box=document.getElementById("matrixBox");
+  const detBadge = det===1
+    ? `<span class="badge det1">det = +1 : 回転のみ(利き手系が同じ)</span>`
+    : `<span class="badge detm1">det = −1 : 鏡映を含む(利き手系が反転 → 巻き順・回転方向に注意)</span>`;
+
+  let scaleTxt="";
+  let mainMat;
+  if(state.useScale && scale!==1){
+    const M4 = [...M.map(r=>[...r.map(v=>v*scale),0]), [0,0,0,1]];
+    mainMat = matHTML(M4);
+    scaleTxt = `<p style="color:var(--fg2);font-size:.9rem;margin-top:6px">
+      単位換算 ×${fmt(scale)}(${A.label}: 1u=1${A.unit} → ${B.label}: 1u=1${B.unit})を含む 4×4 同次変換行列。
+      方向ベクトル・法線にはこの倍率を掛けないこと。</p>`;
+  } else {
+    mainMat = matHTML(M);
+    if(scale!==1){
+      scaleTxt = `<p style="color:var(--fg2);font-size:.9rem;margin-top:6px">
+        ※ 単位も異なります(${A.label}: 1u=1${A.unit} / ${B.label}: 1u=1${B.unit})。
+        位置座標にはさらに <b class="mono">×${fmt(scale)}</b> が必要です(上のチェックで行列に含められます)。</p>`;
+    }
+  }
+
+  const scalePrefix = (state.useScale && scale!==1) ? `${fmt(scale)} · ` : "";
+  box.innerHTML = `
+    <div class="formula">${A.label} ${mappingFormula(M)} ${B.label}${scalePrefix?` , 位置は ${scalePrefix}(…)`:""}</div>
+    ${detBadge}
+    <div class="matline">
+      <span class="op mono">p<sub>${B.label.split(" ")[0]}</sub> = ${scalePrefix}</span>
+      ${mainMat}
+      <span class="op mono">· p<sub>${A.label.split(" ")[0]}</sub></span>
+    </div>
+    ${scaleTxt}
+    <details>
+      <summary>この行列の導出を見る(M = S<sub>変換先</sub> · S<sub>変換元</sub><sup>T</sup>)</summary>
+      <p style="color:var(--fg2);font-size:.9rem">S の列は左から順に「右・上・前」の意味方向。直交行列なので逆行列は転置。</p>
+      <div class="matline">
+        ${matHTML(M)} <span class="op">=</span>
+        <span class="matlabel">${matHTML(B.S)}<span class="t">S(${B.label})</span></span>
+        <span class="op">·</span>
+        <span class="matlabel">${matHTML(transpose(A.S))}<span class="t">S(${A.label})<sup>T</sup></span></span>
+      </div>
+    </details>`;
+}
+
+/* ---------- DOM: 変換例テーブル ---------- */
+function col(M,j){ return [M[0][j],M[1][j],M[2][j]]; }
+function updatePointsTable(cv){
+  const {A,B,M,scale}=cv;
+  const s = state.useScale ? scale : 1;
+  const p = state.point;
+  const pDst = vScale(matVec(M,p), s);
+
+  const rows=[];
+  rows.push(`<tr>
+    <td>変換したい点<br><span class="note">(編集できます)</span></td>
+    <td class="mono">(
+      <input type="number" step="0.5" id="px" value="${p[0]}">,
+      <input type="number" step="0.5" id="py" value="${p[1]}">,
+      <input type="number" step="0.5" id="pz" value="${p[2]}"> )</td>
+    <td class="arr">➜</td>
+    <td class="mono"><b id="pDstCell">${fmtVec(pDst)}</b></td>
+    <td class="note">3Dビューの点と連動${s!==1?` / 単位換算 ×${fmt(s)} 込み`:""}</td>
+  </tr>`);
+
+  const semRows=[["右 (Right)",0],["上 (Up)",1],["前 (Forward)",2]];
+  for(const [name,j] of semRows){
+    const va=col(A.S,j), vb=col(B.S,j);
+    rows.push(`<tr>
+      <td>${name} の単位ベクトル</td>
+      <td class="mono">${fmtVec(va)}</td>
+      <td class="arr">➜</td>
+      <td class="mono">${fmtVec(vb)}</td>
+      <td class="note">${B.label} の「${name.split(" ")[0]}」に一致(方向なので単位換算なし)</td>
+    </tr>`);
+  }
+
+  document.getElementById("ptsTable").innerHTML =
+    `<tr><th>例</th><th>${A.label} での座標</th><th></th><th>${B.label} での座標</th><th>備考</th></tr>`
+    + rows.join("");
+
+  for(const [id,i] of [["px",0],["py",1],["pz",2]]){
+    document.getElementById(id).oninput=e=>{
+      const v=parseFloat(e.target.value);
+      if(!Number.isNaN(v)){
+        state.point[i]=v;
+        const c=conversion();
+        const sc=state.useScale ? c.scale : 1;
+        document.getElementById("pDstCell").textContent=fmtVec(vScale(matVec(c.M,state.point),sc));
+        updateCalcBox(c);
+      }
+    };
+  }
+  updateCalcBox(cv);
+}
+function updateCalcBox(cv){
+  const {M,scale}=cv;
+  const s = state.useScale ? scale : 1;
+  const p = state.point;
+  const vars=["x","y","z"];
+  const lines = M.map((row,i)=>{
+    let j = row.findIndex(v=>v!==0);
+    const sign = row[j]<0 ? "−" : "";
+    const val = s * row[j] * p[j];
+    const sTxt = s!==1 ? fmt(s)+"·" : "";
+    return `${vars[i]}′ = ${sTxt}${sign}${vars[j]} = <b>${fmt(val)}</b>`;
+  });
+  document.getElementById("calcBox").innerHTML =
+    "計算の内訳:&nbsp;&nbsp;" + lines.join("&nbsp;&nbsp;|&nbsp;&nbsp;");
+}
+
+/* ============================================================
+   3D レンダラ(意味空間 (r, u, f) で描画)
+   描画座標系: x=右, y=上, z=−前(手前が +z)
+   ============================================================ */
+const cvS=document.getElementById("cvSrc"), cvD=document.getElementById("cvDst");
+const AXIS_COLORS=["#ff6b6b","#5fd07a","#5da9ff"];
+
+function toRender(p){ return [p[0], p[1], -p[2]]; }
+
+function makeCamera(w,h){
+  const {yaw,pitch,r}=state.cam;
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const C=[r*cp*Math.sin(yaw), r*sp, r*cp*Math.cos(yaw)];
+  const fwd=vNorm(vScale(C,-1));
+  const right=vNorm(vCross(fwd,[0,1,0]));
+  const up=vCross(right,fwd);
+  const focal=1.55*Math.min(w,h);
+  return { project(sem){
+    const P=toRender(sem);
+    const d=[P[0]-C[0],P[1]-C[1],P[2]-C[2]];
+    const vz=vDot(d,fwd);
+    if(vz<0.15) return null;
+    return [w/2 + vDot(d,right)*focal/vz, h/2 - vDot(d,up)*focal/vz, vz];
+  }};
+}
+
+/* 紙飛行機(意味空間で定義 → 両ビューで同じ見た目になる) */
+const PLANE_TRIS=[
+  { pts:[[0,0.06,1.15],[0.95,0,-0.5],[0,0.06,-0.6]], fill:"#e8963f", stroke:"#a8621f" },  // 右翼
+  { pts:[[0,0.06,1.15],[0,0.06,-0.6],[-0.95,0,-0.5]], fill:"#aeb8c9", stroke:"#6b7386" }, // 左翼
+  { pts:[[0,0.06,-0.6],[0,0.65,-0.55],[0,0.06,0.25]], fill:"#7aa2ff", stroke:"#4a6cc0" }, // 垂直尾翼
+];
+
+function drawView(canvas, sys, pEngine, labelCoords){
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  if(canvas.width!==Math.round(w*dpr)){ canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr); }
+  const ctx=canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const cam=makeCamera(w,h);
+
+  const line=(a,b,color,width,dash)=>{
+    const A=cam.project(a), B=cam.project(b);
+    if(!A||!B) return;
+    ctx.strokeStyle=color; ctx.lineWidth=width;
+    ctx.setLineDash(dash||[]);
+    ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.stroke();
+    ctx.setLineDash([]);
+  };
+
+  // 地面グリッド(意味空間の 右-前 平面)
+  for(let g=-3;g<=3;g++){
+    const c = g===0 ? "rgba(255,255,255,0.13)" : "rgba(255,255,255,0.055)";
+    line([-3,0,g],[3,0,g],c,1);
+    line([g,0,-3],[g,0,3],c,1);
+  }
+
+  // 紙飛行機(奥から手前へ描画)
+  const tris = PLANE_TRIS.map(t=>{
+    const pr=t.pts.map(p=>cam.project(p));
+    if(pr.some(p=>!p)) return null;
+    return { ...t, pr, depth:(pr[0][2]+pr[1][2]+pr[2][2])/3 };
+  }).filter(Boolean).sort((a,b)=>b.depth-a.depth);
+  for(const t of tris){
+    ctx.beginPath();
+    ctx.moveTo(t.pr[0][0],t.pr[0][1]);
+    ctx.lineTo(t.pr[1][0],t.pr[1][1]);
+    ctx.lineTo(t.pr[2][0],t.pr[2][1]);
+    ctx.closePath();
+    ctx.fillStyle=t.fill; ctx.globalAlpha=0.9; ctx.fill(); ctx.globalAlpha=1;
+    ctx.strokeStyle=t.stroke; ctx.lineWidth=1; ctx.stroke();
+  }
+
+  // エンジン軸(S の第 i 行 = エンジン軸 i の意味方向)
+  const label=(txt,x,y,color,font)=>{
+    ctx.font=font||"bold 14px ui-monospace,Consolas,monospace";
+    ctx.lineWidth=3; ctx.strokeStyle="rgba(15,17,23,0.85)";
+    ctx.strokeText(txt,x,y);
+    ctx.fillStyle=color; ctx.fillText(txt,x,y);
+  };
+  const ROLE_POS=["右","上","前"], ROLE_NEG=["左","下","後"];
+  for(let i=0;i<3;i++){
+    const dir=sys.S[i];                     // 行 i
+    const tip=vScale(dir,2.3);
+    const A=cam.project([0,0,0]), B=cam.project(tip);
+    if(!A||!B) continue;
+    ctx.strokeStyle=AXIS_COLORS[i]; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.stroke();
+    // 矢じり
+    const dx=B[0]-A[0], dy=B[1]-A[1], L=Math.hypot(dx,dy)||1;
+    const ux=dx/L, uy=dy/L;
+    ctx.fillStyle=AXIS_COLORS[i];
+    ctx.beginPath();
+    ctx.moveTo(B[0],B[1]);
+    ctx.lineTo(B[0]-11*ux+5*uy, B[1]-11*uy-5*ux);
+    ctx.lineTo(B[0]-11*ux-5*uy, B[1]-11*uy+5*ux);
+    ctx.closePath(); ctx.fill();
+    // ラベル: 軸名 + 意味(右/上/前 など)
+    const j=dir.findIndex(v=>v!==0);
+    const role = dir[j]>0 ? ROLE_POS[j] : ROLE_NEG[j];
+    label("XYZ"[i], B[0]+16*ux-4, B[1]+16*uy+4, AXIS_COLORS[i]);
+    label("("+role+")", B[0]+16*ux+8, B[1]+16*uy+4, "rgba(230,232,238,0.75)", "10px sans-serif");
+  }
+
+  // 変換対象の点: 軸分解の階段 + マーカー
+  const pSem = matVec(transpose(sys.S), pEngine);   // p_sem = Sᵀ p_engine
+  if(state.showDecomp){
+    let acc=[0,0,0];
+    for(let i=0;i<3;i++){
+      const next=vAdd(acc, vScale(sys.S[i], pEngine[i]));
+      line(acc,next,AXIS_COLORS[i],1.6,[5,4]);
+      acc=next;
+    }
+  }
+  const P=cam.project(pSem);
+  if(P){
+    ctx.fillStyle="#ffffff";
+    ctx.beginPath(); ctx.arc(P[0],P[1],4.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#7aa2ff"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(P[0],P[1],7.5,0,Math.PI*2); ctx.stroke();
+    label(fmtVec(labelCoords), P[0]+12, P[1]-10, "#ffffff", "12.5px ui-monospace,Consolas,monospace");
+  }
+}
+
+/* ---------- カメラ操作(両ビュー連動) ---------- */
+for(const cv of [cvS,cvD]){
+  let dragging=false, lx=0, ly=0;
+  cv.addEventListener("pointerdown",e=>{
+    dragging=true; lx=e.clientX; ly=e.clientY;
+    cv.setPointerCapture(e.pointerId);
+    state.autoRot=false; document.getElementById("chkRot").checked=false;
+  });
+  cv.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    state.cam.yaw   -= (e.clientX-lx)*0.008;
+    state.cam.pitch  = Math.max(-1.4, Math.min(1.4, state.cam.pitch+(e.clientY-ly)*0.006));
+    lx=e.clientX; ly=e.clientY;
+  });
+  cv.addEventListener("pointerup",()=>dragging=false);
+  cv.addEventListener("wheel",e=>{
+    e.preventDefault();
+    state.cam.r=Math.max(4,Math.min(22,state.cam.r*Math.exp(e.deltaY*0.001)));
+  },{passive:false});
+}
+
+/* ---------- 更新 & メインループ ---------- */
+function updateAll(){
+  const cv=conversion();
+  document.getElementById("blenderFwdWrap").style.display =
+    (state.src==="blender"||state.dst==="blender") ? "" : "none";
+  document.getElementById("cardSrc").innerHTML=cardHTML(cv.A,"変換元");
+  document.getElementById("cardDst").innerHTML=cardHTML(cv.B,"変換先");
+  const capTxt=s=>`${s.label} — ${s.hand==="RH"?"右手系":"左手系"} / ${axisName(s.U)}アップ / 前方 ${axisName(s.F)} / 1u=1${s.unit}`;
+  document.getElementById("capSrc").textContent="変換元: "+capTxt(cv.A);
+  document.getElementById("capDst").textContent="変換先: "+capTxt(cv.B);
+  updateMatrixBox(cv);
+  updatePointsTable(cv);
+}
+
+function frame(){
+  if(state.autoRot) state.cam.yaw += 0.0028;
+  const cv=conversion();
+  const s = state.useScale ? cv.scale : 1;
+  const pDstUnscaled = matVec(cv.M, state.point);
+  drawView(cvS, cv.A, state.point, state.point);
+  drawView(cvD, cv.B, pDstUnscaled, vScale(pDstUnscaled,s));
+  requestAnimationFrame(frame);
+}
+
+updateAll();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
