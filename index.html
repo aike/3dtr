@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -120,6 +120,12 @@ footer{margin-top:28px;font-size:.8rem;color:var(--fg3)}
 header{position:relative}
 .about{position:absolute;top:2px;right:0;font-size:.8rem;color:var(--fg3);text-decoration:none}
 .about:hover{color:var(--accent);text-decoration:underline}
+.langsw{position:absolute;top:0;right:52px;display:flex;gap:4px}
+.langsw button{font-size:.75rem;padding:2px 9px;border-radius:99px;color:var(--fg3);background:none;border:1px solid transparent}
+.langsw button:hover{color:var(--accent);border-color:var(--line)}
+.langsw button.on{color:var(--accent);background:var(--panel);border-color:var(--line)}
+html[data-lang="en"] .i18n-ja{display:none!important}
+html[data-lang="ja"] .i18n-en{display:none!important}
 
 @media (max-width:760px){
   .cards{grid-template-columns:1fr}
@@ -133,27 +139,31 @@ header{position:relative}
 
 <header>
   <a class="about" href="https://github.com/aike/3dtr" target="_blank" rel="noopener">about</a>
-  <h1>3D座標系 変換ビジュアライザ</h1>
-  <p class="sub">Unity / Unreal / Godot / Blender / Maya / glTF / OpenGL / Direct3D — ツール間で「同じ向き・同じ位置」を保つための座標変換行列を学ぶ</p>
+  <span class="langsw">
+    <button id="btnLangJa" type="button">JP</button>
+    <button id="btnLangEn" type="button">EN</button>
+  </span>
+  <h1><span class="i18n-ja">3D座標系 変換ビジュアライザ</span><span class="i18n-en">3D Coordinate System Conversion Visualizer</span></h1>
+  <p class="sub"><span class="i18n-ja">Unity / Unreal / Godot / Blender / Maya / glTF / OpenGL / Direct3D — ツール間で「同じ向き・同じ位置」を保つための座標変換行列を学ぶ</span><span class="i18n-en">Unity / Unreal / Godot / Blender / Maya / glTF / OpenGL / Direct3D — learn the conversion matrices that keep the same orientation and position across tools</span></p>
 </header>
 
 <section class="controls">
-  <label>変換元
+  <label><span class="i18n-ja">変換元</span><span class="i18n-en">From</span>
     <select id="selSrc"></select>
   </label>
-  <button id="btnSwap" title="変換元と変換先を入れ替え">⇄</button>
-  <label>変換先
+  <button id="btnSwap" title="⇄">⇄</button>
+  <label><span class="i18n-ja">変換先</span><span class="i18n-en">To</span>
     <select id="selDst"></select>
   </label>
-  <label id="blenderFwdWrap" style="display:none">Blenderの前方軸
+  <label id="blenderFwdWrap" style="display:none"><span class="i18n-ja">Blenderの前方軸</span><span class="i18n-en">Blender forward axis</span>
     <select id="selBlenderFwd">
       <option value="+Y">+Y(Y↔Z入替の定番)</option>
       <option value="-Y">−Y(正面=−Yの慣習)</option>
     </select>
   </label>
-  <label class="chk"><input type="checkbox" id="chkScale">単位換算を含める</label>
-  <label class="chk"><input type="checkbox" id="chkDecomp" checked>軸分解を表示</label>
-  <label class="chk"><input type="checkbox" id="chkRot" checked>自動回転</label>
+  <label class="chk"><input type="checkbox" id="chkScale"><span class="i18n-ja">単位換算を含める</span><span class="i18n-en">Include unit conversion</span></label>
+  <label class="chk"><input type="checkbox" id="chkDecomp" checked><span class="i18n-ja">軸分解を表示</span><span class="i18n-en">Show axis decomposition</span></label>
+  <label class="chk"><input type="checkbox" id="chkRot" checked><span class="i18n-ja">自動回転</span><span class="i18n-en">Auto-rotate</span></label>
 </section>
 
 <section>
@@ -165,22 +175,23 @@ header{position:relative}
 </section>
 
 <section>
-  <h2>3Dビュー — 両方のツールで「同じ見た目」になるのがゴール</h2>
+  <h2><span class="i18n-ja">3Dビュー — 両方のツールで「同じ見た目」になるのがゴール</span><span class="i18n-en">3D View — the goal: both tools show the same thing</span></h2>
   <div class="viewports">
     <div class="vp"><canvas id="cvSrc"></canvas><div class="cap" id="capSrc"></div></div>
     <div class="vp"><canvas id="cvDst"></canvas><div class="cap" id="capDst"></div></div>
   </div>
-  <p class="legend">✈ 紙飛行機:機首=<b>前方(Forward)</b>/垂直尾翼=<b>上(Up)</b>/オレンジの翼=<b>右(Right)</b>。
-  ドラッグで回転・ホイールでズーム(両ビュー連動)。点線は変換対象の点を各エンジンの軸成分に分解した経路です。</p>
+  <p class="legend"><span class="i18n-ja">✈ 紙飛行機:機首=<b>前方(Forward)</b>/垂直尾翼=<b>上(Up)</b>/オレンジの翼=<b>右(Right)</b>。
+  ドラッグで回転・ホイールでズーム(両ビュー連動)。点線は変換対象の点を各エンジンの軸成分に分解した経路です。</span><span class="i18n-en">✈ Paper plane: nose = <b>Forward</b> / tail fin = <b>Up</b> / orange wing = <b>Right</b>.
+  Drag to rotate, scroll to zoom (both views are linked). The dashed lines decompose the converted point into each engine's axis components.</span></p>
 </section>
 
 <section>
-  <h2>変換行列</h2>
+  <h2><span class="i18n-ja">変換行列</span><span class="i18n-en">Conversion Matrix</span></h2>
   <div class="panelbox" id="matrixBox"></div>
 </section>
 
 <section class="pts">
-  <h2>座標の変換例</h2>
+  <h2><span class="i18n-ja">座標の変換例</span><span class="i18n-en">Coordinate Conversion Examples</span></h2>
   <div class="panelbox">
     <table id="ptsTable"></table>
     <div class="calcbox" id="calcBox"></div>
@@ -188,10 +199,11 @@ header{position:relative}
 </section>
 
 <section class="notes">
-  <h2>解説</h2>
+  <h2><span class="i18n-ja">解説</span><span class="i18n-en">Notes</span></h2>
 
   <details open>
-    <summary>変換行列はどうやって作る?</summary>
+    <summary><span class="i18n-ja">変換行列はどうやって作る?</span><span class="i18n-en">How is the conversion matrix built?</span></summary>
+    <div class="i18n-ja">
     <p>各ツールの座標系は「<b>右(Right)・上(Up)・前(Forward)</b>がどの軸か」で決まります。
     ツールごとに、意味方向(右・上・前)を各エンジン座標で表した列ベクトルを並べた行列
     <code>S = [ R U F ]</code> を作ると、任意の意味的な方向 v は各ツールで <code>S·v</code> と表せます。</p>
@@ -199,38 +211,77 @@ header{position:relative}
     <b><code>M = S<sub>B</sub> · S<sub>A</sub><sup>−1</sup></code></b> です。
     S は符号付き置換行列(直交行列)なので <code>S<sup>−1</sup> = S<sup>T</sup></code> となり、
     M も必ず「成分が 0, ±1 だけの行列」になります。つまり座標変換の実体は<b>軸の入れ替えと符号反転</b>です。</p>
+    </div>
+    <div class="i18n-en">
+    <p>Each tool's coordinate system is defined by which axes mean <b>Right, Up, and Forward</b>.
+    For each tool, build the matrix <code>S = [ R U F ]</code> whose columns express those semantic
+    directions in that engine's coordinates; any semantic direction v is then <code>S·v</code> in that tool.</p>
+    <p>The conversion from tool A to tool B is the composition "A coordinates → semantic space → B coordinates":
+    <b><code>M = S<sub>B</sub> · S<sub>A</sub><sup>−1</sup></code></b>.
+    Since S is a signed permutation (orthogonal) matrix, <code>S<sup>−1</sup> = S<sup>T</sup></code>,
+    so M always contains only 0 and ±1 — a coordinate conversion is really just <b>axis swaps and sign flips</b>.</p>
+    </div>
   </details>
 
   <details>
-    <summary>行列式 det = −1 の意味 — 利き手系の反転</summary>
+    <summary><span class="i18n-ja">行列式 det = −1 の意味 — 利き手系の反転</span><span class="i18n-en">What det = −1 means — handedness flip</span></summary>
+    <div class="i18n-ja">
     <p>右手系⇔左手系の変換では det(M) = −1 になります。これは<b>鏡映(反転)を含む</b>変換で、純粋な回転では実現できません。実務では次の影響があります:</p>
     <ul>
       <li><b>三角形の巻き順(winding order)が反転</b>する → 表裏が逆になるため、インポータはインデックス順の反転や法線の再計算を行う</li>
       <li><b>回転の向きが反転</b>する → オイラー角やクォータニオンは成分の入れ替えだけでなく符号の調整が必要</li>
       <li>変換行列(姿勢)T を丸ごと移すときは <code>T′ = M · T · M<sup>−1</sup></code> とすれば利き手系の違いも含めて正しく変換できる</li>
     </ul>
+    </div>
+    <div class="i18n-en">
+    <p>Converting between right- and left-handed systems gives det(M) = −1. The transform <b>includes a reflection</b> and cannot be achieved by pure rotation. In practice this means:</p>
+    <ul>
+      <li><b>Triangle winding order flips</b> → faces turn inside out, so importers reverse index order or recompute normals</li>
+      <li><b>Rotation direction flips</b> → Euler angles and quaternions need sign adjustments, not just component swaps</li>
+      <li>To convert a whole transform (pose) T, use <code>T′ = M · T · M<sup>−1</sup></code>, which correctly handles the handedness change too</li>
+    </ul>
+    </div>
   </details>
 
   <details>
-    <summary>単位(スケール)の違い</summary>
+    <summary><span class="i18n-ja">単位(スケール)の違い</span><span class="i18n-en">Unit (scale) differences</span></summary>
+    <div class="i18n-ja">
     <p>軸だけでなく<b>1単位の長さ</b>もツールごとに違います:
     Unity = 1m、Godot = 1m、Blender = 1m(既定)、<b>Unreal = 1cm</b>、<b>Maya = 1cm(既定)</b>。
     位置座標には単位換算の係数を掛けます(例: Unity→Unreal は ×100)。
     上のチェックボックスをオンにすると 4×4 同次変換行列としてスケール込みで表示します。
     <b>方向ベクトルや法線には単位換算を掛けません</b>。</p>
+    </div>
+    <div class="i18n-en">
+    <p>Beyond axes, <b>the length of one unit</b> also differs per tool:
+    Unity = 1 m, Godot = 1 m, Blender = 1 m (default), <b>Unreal = 1 cm</b>, <b>Maya = 1 cm (default)</b>.
+    Positions must be multiplied by the unit-conversion factor (e.g. Unity→Unreal is ×100).
+    Turn on the checkbox above to show a 4×4 homogeneous matrix with the scale included.
+    <b>Never apply unit conversion to direction vectors or normals</b>.</p>
+    </div>
   </details>
 
   <details>
-    <summary>Blenderの「前方」はどっち? (+Y / −Y 問題)</summary>
+    <summary><span class="i18n-ja">Blenderの「前方」はどっち? (+Y / −Y 問題)</span><span class="i18n-en">Which way is Blender's "forward"? (the +Y / −Y problem)</span></summary>
+    <div class="i18n-ja">
     <p>Blender はフロントビュー(テンキー1)が <b>−Y 方向からモデルを見る</b>ため、
     「キャラクターの正面を −Y に向ける」流儀が一般的です。一方、変換レシピとしては
     単純に <b>Y と Z を入れ替える(前方=+Y とみなす)</b>方法が広く使われています。
     どちらが正しいというものではなく、エクスポート設定(FBX/glTFの Forward/Up 指定)と
     合わせて一貫させることが重要です。上のセレクタで両方試して、行列がどう変わるか比べてみてください。</p>
+    </div>
+    <div class="i18n-en">
+    <p>Blender's front view (numpad 1) <b>looks at the model from the −Y direction</b>,
+    so the convention of pointing a character's front toward −Y is common. As a conversion recipe, though,
+    simply <b>swapping Y and Z (treating forward as +Y)</b> is widely used.
+    Neither is "correct" — what matters is staying consistent with your export settings
+    (the Forward/Up options in FBX/glTF export). Try both with the selector above and compare the matrices.</p>
+    </div>
   </details>
 
   <details>
-    <summary>glTF の前方 +Z と OpenGL の前方 −Z — 「前方」の意味の違いに注意</summary>
+    <summary><span class="i18n-ja">glTF の前方 +Z と OpenGL の前方 −Z — 「前方」の意味の違いに注意</span><span class="i18n-en">glTF forward +Z vs OpenGL forward −Z — "forward" means different things</span></summary>
+    <div class="i18n-ja">
     <p>glTF 仕様は「右手系・+Y up・<b>アセットの正面は +Z を向く</b>・右は −X」と定めています。
     一方 OpenGL の「前方 −Z」は<b>カメラの視線方向</b>の慣習です。glTF の +Z は
     「モデルがカメラの方を向く」向きなので、両者の「前方」は意味が逆向きです。
@@ -240,11 +291,23 @@ header{position:relative}
     <p>実務での検算: Blender(前方 = −Y)→ glTF は公式エクスポータどおり
     <code>(x, y, z) ↦ (x, z, −y)</code>、Unity → glTF は X 反転
     <code>(x, y, z) ↦ (−x, y, z)</code> になります(上のセレクタで確認できます)。</p>
+    </div>
+    <div class="i18n-en">
+    <p>The glTF spec says: right-handed, +Y up, <b>assets face +Z</b>, right is −X.
+    OpenGL's "forward −Z", on the other hand, is a <b>camera view-direction</b> convention.
+    glTF's +Z means the model faces the camera, so the two "forwards" point in opposite directions.
+    This app preserves the meaning of forward/up/right, so glTF ⇔ OpenGL is not the identity but
+    <b>a 180° rotation about the up axis</b>. Mechanically aligning axis labels would give the identity,
+    yet the convention of which way the model faces still differs — the same trap as Blender's ±Y problem.</p>
+    <p>Sanity checks: Blender (forward = −Y) → glTF matches the official exporter,
+    <code>(x, y, z) ↦ (x, z, −y)</code>, and Unity → glTF is an X flip,
+    <code>(x, y, z) ↦ (−x, y, z)</code> (verify with the selectors above).</p>
+    </div>
   </details>
 
   <details>
-    <summary>各ツールの座標系 早見表</summary>
-    <ul>
+    <summary><span class="i18n-ja">各ツールの座標系 早見表</span><span class="i18n-en">Coordinate system cheat sheet</span></summary>
+    <ul class="i18n-ja">
       <li><b>Unity</b> — 左手系 / Y-up / 前方 +Z / 右 +X / 1u = 1m</li>
       <li><b>Unreal Engine</b> — 左手系 / Z-up / 前方 +X / 右 +Y / 1u = 1cm</li>
       <li><b>Godot</b> — 右手系 / Y-up / 前方 −Z(OpenGL流)/ 右 +X / 1u = 1m</li>
@@ -254,10 +317,20 @@ header{position:relative}
       <li><b>OpenGL / WebGL</b> — 右手系 / Y-up / 前方 −Z(視線方向)/ 右 +X / 単位は任意。three.js も同じ慣習</li>
       <li><b>Direct3D</b> — 左手系 / Y-up / 前方 +Z / 右 +X / 単位は任意。Babylon.js の既定も同じ慣習</li>
     </ul>
+    <ul class="i18n-en">
+      <li><b>Unity</b> — left-handed / Y-up / forward +Z / right +X / 1u = 1 m</li>
+      <li><b>Unreal Engine</b> — left-handed / Z-up / forward +X / right +Y / 1u = 1 cm</li>
+      <li><b>Godot</b> — right-handed / Y-up / forward −Z (OpenGL-style) / right +X / 1u = 1 m</li>
+      <li><b>Blender</b> — right-handed / Z-up / forward +Y or −Y (by convention) / 1u = 1 m</li>
+      <li><b>Maya</b> — right-handed / Y-up / forward −Z (OpenGL-style) / right +X / 1u = 1 cm (default)</li>
+      <li><b>glTF</b> — right-handed / Y-up / forward +Z (asset faces +Z) / right −X / 1u = 1 m (per spec)</li>
+      <li><b>OpenGL / WebGL</b> — right-handed / Y-up / forward −Z (view direction) / right +X / units arbitrary; three.js follows the same convention</li>
+      <li><b>Direct3D</b> — left-handed / Y-up / forward +Z / right +X / units arbitrary; Babylon.js defaults match</li>
+    </ul>
   </details>
 </section>
 
-<footer>※ 各ツールの単位・前方軸は代表的な慣習・既定値です。プロジェクト設定やエクスポート設定により異なる場合があります。</footer>
+<footer><span class="i18n-ja">※ 各ツールの単位・前方軸は代表的な慣習・既定値です。プロジェクト設定やエクスポート設定により異なる場合があります。</span><span class="i18n-en">※ Units and forward axes shown are common conventions/defaults; actual values may differ depending on project or export settings.</span></footer>
 
 </div>
 
@@ -282,23 +355,98 @@ const SYSTEMS = {
   godot:   { label:"Godot", hand:"RH", unit:"m",  unitScale:1,
     R:[1,0,0], U:[0,1,0], F:[0,0,-1] },
   gltf:    { label:"glTF", hand:"RH", unit:"m",  unitScale:1,
-    unitText:"1 m(仕様で規定)",
+    unitTextKey:"unitGltf",
     R:[-1,0,0], U:[0,1,0], F:[0,0,1] },
   opengl:  { label:"OpenGL / WebGL", hand:"RH", unit:"m", unitScale:1,
-    unitText:"任意(便宜上 1u=1m)",
+    unitTextKey:"unitAny",
     R:[1,0,0], U:[0,1,0], F:[0,0,-1] },
   d3d:     { label:"Direct3D", hand:"LH", unit:"m", unitScale:1,
-    unitText:"任意(便宜上 1u=1m)",
+    unitTextKey:"unitAny",
     R:[1,0,0], U:[0,1,0], F:[0,0,1] },
 };
 const ORDER = ["blender","maya","unity","unreal","godot","gltf","opengl","d3d"];
 
 const state = {
+  lang:"ja",
   src:"blender", dst:"unity", blenderFwd:"+Y",
   useScale:false, showDecomp:true, autoRot:true,
   point:[1,2,3],
   cam:{ yaw:-0.65, pitch:0.42, r:9 },
 };
+
+/* ---------- 多言語テキスト ---------- */
+const I18N = {
+  ja: {
+    htmlTitle:"3D座標系 変換ビジュアライザ",
+    srcTitle:"変換元", dstTitle:"変換先",
+    rh:"右手系", lh:"左手系",
+    rowUp:"上方向 (Up)", rowFwd:"前方向 (Forward)", rowRight:"右方向 (Right)", rowUnit:"1単位の長さ",
+    unitGltf:"1 m(仕様で規定)", unitAny:"任意(便宜上 1u=1m)",
+    capSrc:"変換元: ", capDst:"変換先: ",
+    cap:s=>`${s.label} — ${s.hand==="RH"?"右手系":"左手系"} / ${axisName(s.U)}アップ / 前方 ${axisName(s.F)} / 1u=1${s.unit}`,
+    det1:"det = +1 : 回転のみ(利き手系が同じ)",
+    detm1:"det = −1 : 鏡映を含む(利き手系が反転 → 巻き順・回転方向に注意)",
+    scaleIncluded:(A,B,scale)=>`単位換算 ×${fmt(scale)}(${A.label}: 1u=1${A.unit} → ${B.label}: 1u=1${B.unit})を含む 4×4 同次変換行列。
+      方向ベクトル・法線にはこの倍率を掛けないこと。`,
+    scaleNote:(A,B,scale)=>`※ 単位も異なります(${A.label}: 1u=1${A.unit} / ${B.label}: 1u=1${B.unit})。
+        位置座標にはさらに <b class="mono">×${fmt(scale)}</b> が必要です(上のチェックで行列に含められます)。`,
+    posIs:sp=>` , 位置は ${sp}(…)`,
+    derivSummary:"この行列の導出を見る(M = S<sub>変換先</sub> · S<sub>変換元</sub><sup>T</sup>)",
+    derivNote:"S の列は左から順に「右・上・前」の意味方向。直交行列なので逆行列は転置。",
+    ptPoint:'変換したい点<br><span class="note">(編集できます)</span>',
+    ptLinked:"3Dビューの点と連動",
+    ptScaleIncl:s=>` / 単位換算 ×${fmt(s)} 込み`,
+    semRows:[["右 (Right)","右"],["上 (Up)","上"],["前 (Forward)","前"]],
+    unitVecOf:name=>`${name} の単位ベクトル`,
+    matchNote:(B,short)=>`${B.label} の「${short}」に一致(方向なので単位換算なし)`,
+    thExample:"例", thCoordIn:l=>`${l} での座標`, thNote:"備考",
+    calcPrefix:"計算の内訳:",
+    rolePos:["右","上","前"], roleNeg:["左","下","後"],
+    blenderFwdOpts:{ "+Y":"+Y(Y↔Z入替の定番)", "-Y":"−Y(正面=−Yの慣習)" },
+  },
+  en: {
+    htmlTitle:"3D Coordinate System Conversion Visualizer",
+    srcTitle:"From", dstTitle:"To",
+    rh:"right-handed", lh:"left-handed",
+    rowUp:"Up", rowFwd:"Forward", rowRight:"Right", rowUnit:"Length of 1 unit",
+    unitGltf:"1 m (per spec)", unitAny:"arbitrary (1u=1m here)",
+    capSrc:"From: ", capDst:"To: ",
+    cap:s=>`${s.label} — ${s.hand==="RH"?"right-handed":"left-handed"} / ${axisName(s.U)} up / forward ${axisName(s.F)} / 1u=1${s.unit}`,
+    det1:"det = +1 : rotation only (same handedness)",
+    detm1:"det = −1 : includes reflection (handedness flips → watch winding order & rotation direction)",
+    scaleIncluded:(A,B,scale)=>`4×4 homogeneous matrix including unit conversion ×${fmt(scale)} (${A.label}: 1u=1${A.unit} → ${B.label}: 1u=1${B.unit}).
+      Do not apply this factor to direction vectors or normals.`,
+    scaleNote:(A,B,scale)=>`※ Units also differ (${A.label}: 1u=1${A.unit} / ${B.label}: 1u=1${B.unit}).
+        Positions additionally need <b class="mono">×${fmt(scale)}</b> (enable the checkbox above to include it in the matrix).`,
+    posIs:sp=>` , positions: ${sp}(…)`,
+    derivSummary:"Show derivation (M = S<sub>to</sub> · S<sub>from</sub><sup>T</sup>)",
+    derivNote:"The columns of S are the semantic directions right, up, forward (left to right). S is orthogonal, so its inverse is its transpose.",
+    ptPoint:'Point to convert<br><span class="note">(editable)</span>',
+    ptLinked:"Linked to the 3D view point",
+    ptScaleIncl:s=>` / includes unit conversion ×${fmt(s)}`,
+    semRows:[["Right","Right"],["Up","Up"],["Forward","Forward"]],
+    unitVecOf:name=>`Unit vector of ${name}`,
+    matchNote:(B,short)=>`Matches ${B.label}'s "${short}" (direction — no unit conversion)`,
+    thExample:"Example", thCoordIn:l=>`Coordinates in ${l}`, thNote:"Notes",
+    calcPrefix:"Breakdown:",
+    rolePos:["Right","Up","Fwd"], roleNeg:["Left","Down","Back"],
+    blenderFwdOpts:{ "+Y":"+Y (classic Y↔Z swap)", "-Y":"−Y (front = −Y convention)" },
+  },
+};
+const t = k => I18N[state.lang][k];
+
+function setLang(lang){
+  state.lang = lang;
+  try{ localStorage.setItem("3dtr-lang", lang); }catch(e){}
+  document.documentElement.dataset.lang = lang;
+  document.documentElement.lang = lang;
+  document.title = t("htmlTitle");
+  document.getElementById("btnLangJa").classList.toggle("on", lang==="ja");
+  document.getElementById("btnLangEn").classList.toggle("on", lang==="en");
+  const sel = document.getElementById("selBlenderFwd");
+  for(const o of sel.options) o.text = t("blenderFwdOpts")[o.value];
+  updateAll();
+}
 
 /* ---------- 小さな行列/ベクトルユーティリティ ---------- */
 const vAdd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
@@ -342,7 +490,7 @@ function resolve(key){
   const ruf = base.variants ? base.variants[state.blenderFwd] : base;
   return {
     key, label: base.label, hand: base.hand, unit: base.unit, unitScale: base.unitScale,
-    unitText: base.unitText,
+    unitTextKey: base.unitTextKey,
     R: ruf.R, U: ruf.U, F: ruf.F,
     S: matFromCols(ruf.R, ruf.U, ruf.F),
   };
@@ -396,14 +544,14 @@ document.getElementById("chkRot").onchange=e=>{state.autoRot=e.target.checked;};
 
 /* ---------- DOM: 情報カード ---------- */
 function cardHTML(sys, title){
-  const handTxt = sys.hand==="RH" ? "右手系" : "左手系";
+  const handTxt = sys.hand==="RH" ? t("rh") : t("lh");
   const handCls = sys.hand==="RH" ? "rh" : "lh";
   return `<h3>${title}: ${sys.label}<span class="hand ${handCls}">${handTxt}</span></h3>
   <table>
-    <tr><td>上方向 (Up)</td><td class="v">${axisSpan(axisName(sys.U))}</td></tr>
-    <tr><td>前方向 (Forward)</td><td class="v">${axisSpan(axisName(sys.F))}</td></tr>
-    <tr><td>右方向 (Right)</td><td class="v">${axisSpan(axisName(sys.R))}</td></tr>
-    <tr><td>1単位の長さ</td><td class="v">${sys.unitText || ("1 " + sys.unit)}</td></tr>
+    <tr><td>${t("rowUp")}</td><td class="v">${axisSpan(axisName(sys.U))}</td></tr>
+    <tr><td>${t("rowFwd")}</td><td class="v">${axisSpan(axisName(sys.F))}</td></tr>
+    <tr><td>${t("rowRight")}</td><td class="v">${axisSpan(axisName(sys.R))}</td></tr>
+    <tr><td>${t("rowUnit")}</td><td class="v">${sys.unitTextKey ? t(sys.unitTextKey) : ("1 " + sys.unit)}</td></tr>
   </table>`;
 }
 
@@ -423,8 +571,8 @@ function updateMatrixBox(cv){
   const {A,B,M,scale,det}=cv;
   const box=document.getElementById("matrixBox");
   const detBadge = det===1
-    ? `<span class="badge det1">det = +1 : 回転のみ(利き手系が同じ)</span>`
-    : `<span class="badge detm1">det = −1 : 鏡映を含む(利き手系が反転 → 巻き順・回転方向に注意)</span>`;
+    ? `<span class="badge det1">${t("det1")}</span>`
+    : `<span class="badge detm1">${t("detm1")}</span>`;
 
   let scaleTxt="";
   let mainMat;
@@ -432,20 +580,18 @@ function updateMatrixBox(cv){
     const M4 = [...M.map(r=>[...r.map(v=>v*scale),0]), [0,0,0,1]];
     mainMat = matHTML(M4);
     scaleTxt = `<p style="color:var(--fg2);font-size:.9rem;margin-top:6px">
-      単位換算 ×${fmt(scale)}(${A.label}: 1u=1${A.unit} → ${B.label}: 1u=1${B.unit})を含む 4×4 同次変換行列。
-      方向ベクトル・法線にはこの倍率を掛けないこと。</p>`;
+      ${t("scaleIncluded")(A,B,scale)}</p>`;
   } else {
     mainMat = matHTML(M);
     if(scale!==1){
       scaleTxt = `<p style="color:var(--fg2);font-size:.9rem;margin-top:6px">
-        ※ 単位も異なります(${A.label}: 1u=1${A.unit} / ${B.label}: 1u=1${B.unit})。
-        位置座標にはさらに <b class="mono">×${fmt(scale)}</b> が必要です(上のチェックで行列に含められます)。</p>`;
+        ${t("scaleNote")(A,B,scale)}</p>`;
     }
   }
 
   const scalePrefix = (state.useScale && scale!==1) ? `${fmt(scale)} · ` : "";
   box.innerHTML = `
-    <div class="formula">${A.label} ${mappingFormula(M)} ${B.label}${scalePrefix?` , 位置は ${scalePrefix}(…)`:""}</div>
+    <div class="formula">${A.label} ${mappingFormula(M)} ${B.label}${scalePrefix?t("posIs")(scalePrefix):""}</div>
     ${detBadge}
     <div class="matline">
       <span class="op mono">p<sub>${B.label.split(" ")[0]}</sub> = ${scalePrefix}</span>
@@ -454,8 +600,8 @@ function updateMatrixBox(cv){
     </div>
     ${scaleTxt}
     <details>
-      <summary>この行列の導出を見る(M = S<sub>変換先</sub> · S<sub>変換元</sub><sup>T</sup>)</summary>
-      <p style="color:var(--fg2);font-size:.9rem">S の列は左から順に「右・上・前」の意味方向。直交行列なので逆行列は転置。</p>
+      <summary>${t("derivSummary")}</summary>
+      <p style="color:var(--fg2);font-size:.9rem">${t("derivNote")}</p>
       <div class="matline">
         ${matHTML(M)} <span class="op">=</span>
         <span class="matlabel">${matHTML(B.S)}<span class="t">S(${B.label})</span></span>
@@ -475,30 +621,31 @@ function updatePointsTable(cv){
 
   const rows=[];
   rows.push(`<tr>
-    <td>変換したい点<br><span class="note">(編集できます)</span></td>
+    <td>${t("ptPoint")}</td>
     <td class="mono">(
       <input type="number" step="0.5" id="px" value="${p[0]}">,
       <input type="number" step="0.5" id="py" value="${p[1]}">,
       <input type="number" step="0.5" id="pz" value="${p[2]}"> )</td>
     <td class="arr">➜</td>
     <td class="mono"><b id="pDstCell">${fmtVec(pDst)}</b></td>
-    <td class="note">3Dビューの点と連動${s!==1?` / 単位換算 ×${fmt(s)} 込み`:""}</td>
+    <td class="note">${t("ptLinked")}${s!==1?t("ptScaleIncl")(s):""}</td>
   </tr>`);
 
-  const semRows=[["右 (Right)",0],["上 (Up)",1],["前 (Forward)",2]];
-  for(const [name,j] of semRows){
+  const semRows=t("semRows");
+  for(let j=0;j<3;j++){
+    const [name,short]=semRows[j];
     const va=col(A.S,j), vb=col(B.S,j);
     rows.push(`<tr>
-      <td>${name} の単位ベクトル</td>
+      <td>${t("unitVecOf")(name)}</td>
       <td class="mono">${fmtVec(va)}</td>
       <td class="arr">➜</td>
       <td class="mono">${fmtVec(vb)}</td>
-      <td class="note">${B.label} の「${name.split(" ")[0]}」に一致(方向なので単位換算なし)</td>
+      <td class="note">${t("matchNote")(B,short)}</td>
     </tr>`);
   }
 
   document.getElementById("ptsTable").innerHTML =
-    `<tr><th>例</th><th>${A.label} での座標</th><th></th><th>${B.label} での座標</th><th>備考</th></tr>`
+    `<tr><th>${t("thExample")}</th><th>${t("thCoordIn")(A.label)}</th><th></th><th>${t("thCoordIn")(B.label)}</th><th>${t("thNote")}</th></tr>`
     + rows.join("");
 
   for(const [id,i] of [["px",0],["py",1],["pz",2]]){
@@ -528,7 +675,7 @@ function updateCalcBox(cv){
     return `${vars[i]}′ = ${sTxt}${sign}${vars[j]} = <b>${fmt(val)}</b>`;
   });
   document.getElementById("calcBox").innerHTML =
-    "計算の内訳:&nbsp;&nbsp;" + lines.join("&nbsp;&nbsp;|&nbsp;&nbsp;");
+    t("calcPrefix") + "&nbsp;&nbsp;" + lines.join("&nbsp;&nbsp;|&nbsp;&nbsp;");
 }
 
 /* ============================================================
@@ -612,7 +759,7 @@ function drawView(canvas, sys, pEngine, labelCoords){
     ctx.strokeText(txt,x,y);
     ctx.fillStyle=color; ctx.fillText(txt,x,y);
   };
-  const ROLE_POS=["右","上","前"], ROLE_NEG=["左","下","後"];
+  const ROLE_POS=t("rolePos"), ROLE_NEG=t("roleNeg");
   for(let i=0;i<3;i++){
     const dir=sys.S[i];                     // 行 i
     const tip=vScale(dir,2.3);
@@ -682,11 +829,10 @@ function updateAll(){
   const cv=conversion();
   document.getElementById("blenderFwdWrap").style.display =
     (state.src==="blender"||state.dst==="blender") ? "" : "none";
-  document.getElementById("cardSrc").innerHTML=cardHTML(cv.A,"変換元");
-  document.getElementById("cardDst").innerHTML=cardHTML(cv.B,"変換先");
-  const capTxt=s=>`${s.label} — ${s.hand==="RH"?"右手系":"左手系"} / ${axisName(s.U)}アップ / 前方 ${axisName(s.F)} / 1u=1${s.unit}`;
-  document.getElementById("capSrc").textContent="変換元: "+capTxt(cv.A);
-  document.getElementById("capDst").textContent="変換先: "+capTxt(cv.B);
+  document.getElementById("cardSrc").innerHTML=cardHTML(cv.A,t("srcTitle"));
+  document.getElementById("cardDst").innerHTML=cardHTML(cv.B,t("dstTitle"));
+  document.getElementById("capSrc").textContent=t("capSrc")+t("cap")(cv.A);
+  document.getElementById("capDst").textContent=t("capDst")+t("cap")(cv.B);
   updateMatrixBox(cv);
   updatePointsTable(cv);
 }
@@ -701,7 +847,11 @@ function frame(){
   requestAnimationFrame(frame);
 }
 
-updateAll();
+document.getElementById("btnLangJa").onclick=()=>setLang("ja");
+document.getElementById("btnLangEn").onclick=()=>setLang("en");
+let savedLang=null;
+try{ savedLang=localStorage.getItem("3dtr-lang"); }catch(e){}
+setLang(savedLang==="en" ? "en" : "ja");   // setLang 内で updateAll() を呼ぶ
 requestAnimationFrame(frame);
 </script>
 </body>
