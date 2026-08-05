@@ -16,7 +16,7 @@ https://aike.github.io/3dtr/
 
 ## 使い方
 
-`3d-coordinate-converter.html` をブラウザ(Chrome / Edge / Firefox / Safari)で開くだけです。
+`index.html` をブラウザ(Chrome / Edge / Firefox / Safari)で開くだけです。
 ビルドやサーバーは不要で、オフラインでも動作します。
 
 ## 機能
